@@ -52,13 +52,17 @@ interface GlowBackgroundProps {
    * as the base layer (e.g. a hero illustration already matching the
    * near-black + scarlet palette). Sparks and gradient overlay still apply. */
   heroImage?: string;
+  /** CSS object-position for the hero image. object-cover crops a portrait
+   * image's height hard on wide/short viewports, so the image's most
+   * visible feature (a glow, a subject) may need biasing to stay in frame. */
+  imagePosition?: string;
 }
 
 /** Ambient near-black backdrop: either a hero image or a WebGL scarlet-glow
  * shader behind a gradient overlay, plus a handful of drifting, pulsing
  * "sparks" — meant to read as small bursts of attraction rather than
  * fireplace embers, each with a bright core and a soft halo that breathes. */
-export default function GlowBackground({ heroImage }: GlowBackgroundProps) {
+export default function GlowBackground({ heroImage, imagePosition = 'center' }: GlowBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Fixed on mount so sparks don't re-randomize on re-render.
@@ -143,13 +147,24 @@ export default function GlowBackground({ heroImage }: GlowBackgroundProps) {
   return (
     <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
       {heroImage ? (
-        <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-90" />
+        <img
+          src={heroImage}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: imagePosition }}
+        />
       ) : (
         <div className="absolute inset-0 w-full h-full opacity-60">
           <canvas ref={canvasRef} className="block w-full h-full" />
         </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background" />
+      <div
+        className={`absolute inset-0 bg-gradient-to-b ${
+          heroImage
+            ? 'from-background/20 via-transparent to-background/20'
+            : 'from-background via-transparent to-background'
+        }`}
+      />
       <div className="absolute inset-0 z-10">
         {sparks.map((spark, i) => (
           <div
