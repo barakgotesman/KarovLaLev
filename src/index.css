@@ -123,3 +123,36 @@ body {
     transform: translateY(0);
   }
 }
+
+@keyframes toggle-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(255, 26, 60, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 26, 60, 0.8);
+  }
+}
+
+@keyframes toggle-pop {
+  0% {
+    transform: translateX(-1.5rem) scale(1);
+  }
+  40% {
+    transform: translateX(-1.5rem) scale(1.2);
+  }
+  100% {
+    transform: translateX(-1.5rem) scale(1.05);
+  }
+}
+
+@keyframes toggle-burst {
+  0% {
+    transform: rotate(var(--angle)) translateX(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--angle)) translateX(var(--distance)) scale(0);
+    opacity: 0;
+  }
+}
