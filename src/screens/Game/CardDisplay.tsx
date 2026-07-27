@@ -4,6 +4,11 @@ interface CardDisplayProps {
   questionText: string;
   isFlipped: boolean;
   onFlip: () => void;
+  /** Fires once the flip-back-to-face-down animation actually finishes.
+   * Callers should swap questionText here rather than immediately on
+   * click — swapping it right away is visible mid-rotation, before the
+   * card has actually turned face-down. */
+  onFlipComplete?: () => void;
 }
 
 // Card-back lattice: a diamond linework grid with a center dot at each
@@ -19,7 +24,12 @@ const CARD_BACK_PATTERN = encodeURIComponent(
 
 /** The face-down/face-up game card. Tapping the face-down back triggers
  * a 3D flip-reveal showing the question text on the front. */
-export default function CardDisplay({ questionText, isFlipped, onFlip }: CardDisplayProps) {
+export default function CardDisplay({
+  questionText,
+  isFlipped,
+  onFlip,
+  onFlipComplete,
+}: CardDisplayProps) {
   return (
     <div
       className="flex-1 min-h-0 flex items-center justify-center px-gutter"
@@ -30,6 +40,9 @@ export default function CardDisplay({ questionText, isFlipped, onFlip }: CardDis
         style={{ transformStyle: 'preserve-3d' }}
         animate={{ rotateY: isFlipped ? 180 : 0 }}
         transition={{ duration: 0.7, ease: 'easeInOut' }}
+        onAnimationComplete={() => {
+          if (!isFlipped) onFlipComplete?.();
+        }}
         onClick={onFlip}
       >
         {/* Card Back */}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import GlowBackground from '../../components/ui/GlowBackground';
 import gameBackground from '../../assets/images/game-background.png';
@@ -14,6 +14,10 @@ export default function GameScreen({ onEndSession }: GameScreenProps) {
   const { state, drawNextCard } = useSession();
   const [isFlipped, setIsFlipped] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  // Guards against CardDisplay's onAnimationComplete firing spuriously on
+  // mount (isFlipped already starts false, so no real animation runs) —
+  // only an explicit "next card" click should trigger a draw.
+  const pendingDrawRef = useRef(false);
 
   // Auto-advance to the End screen once the deck is exhausted (currentCard
   // goes null after a draw), or if the session's filters produced an empty
@@ -30,7 +34,16 @@ export default function GameScreen({ onEndSession }: GameScreenProps) {
   }
 
   function handleNextCard() {
+    // Just trigger the flip-back animation here — the actual card swap
+    // happens in handleFlipComplete once the card is fully face-down, so
+    // the new question never flashes into view mid-rotation.
+    pendingDrawRef.current = true;
     setIsFlipped(false);
+  }
+
+  function handleFlipComplete() {
+    if (!pendingDrawRef.current) return;
+    pendingDrawRef.current = false;
     drawNextCard();
   }
 
@@ -81,6 +94,7 @@ export default function GameScreen({ onEndSession }: GameScreenProps) {
           questionText={state.currentCard.text}
           isFlipped={isFlipped}
           onFlip={handleFlip}
+          onFlipComplete={handleFlipComplete}
         />
 
         <div
