@@ -75,10 +75,14 @@ Track drawn card IDs in session state (in-memory, not persisted). When drawing a
 
 ### Stack
 - React (functional components + hooks)
-- Tailwind CSS
+- React Router (`react-router-dom`) — screen navigation is real client-side routing (`/`, `/game`, `/end`), not conditional rendering driven by local state
+- Tailwind CSS v4 (CSS-based `@theme` tokens in `index.css`, not a JS config file)
 - Framer Motion (card flip / transition animations)
-- Web Audio API or Howler.js (sound)
+- Web Audio API or Howler.js (sound) — not yet wired
 - No backend / no database in this phase — all data is local static modules
+
+### Design System (current)
+The active Stitch design system is **"After Hours"**: near-black surfaces (`#0a0a0a`) with a single saturated scarlet accent (`#ff1a3c`) reserved for CTAs/glows/active states — deliberately restrained rather than colorful. Typography is **Rubik** (Hebrew-native, used for all body/label/button text) paired with a bold Rubik Black wordmark treatment for headlines/logo (not a serif — an earlier serif treatment was tried and rejected). See the Stitch project's `designMd` for full rationale.
 
 ### Folder Structure
 
@@ -112,9 +116,12 @@ src/
     useAudio.ts             // background music + SFX playback control
   utils/
     shuffle.ts              // deck shuffling utility (e.g. Fisher-Yates)
-  App.tsx                   // screen routing/state machine (Welcome → Game → End)
+  App.tsx                   // <Routes> definitions (react-router-dom): "/" → Welcome, "/game" → Game, "/end" → End
+  main.tsx                  // wraps <App /> in <BrowserRouter>
   types.ts                  // shared TypeScript types (Card, Category, GameState)
 ```
+
+Each route in `App.tsx` is a thin wrapper component that calls `useNavigate()` and passes the resulting navigation callbacks into the actual screen component as props — the screen components themselves (`WelcomeScreen`, `GameScreen`, `EndScreen`) stay routing-agnostic and only know about `onStart`/`onEndSession`/`onRestart`/`onExit` callback props.
 
 ### Data Management Guidelines
 - `data/cards.ts` exports a single typed array of `Card` objects. Keep it as the single source of truth for content — no card text duplicated elsewhere.
@@ -123,7 +130,8 @@ src/
 - Structure `cards.ts` so that adding a future remote-fetch layer (e.g. replacing the static array with an API call) only requires changing how the array is populated, not how it's consumed by `useGameSession`.
 
 ### State Management
-- Session state (current turn number, drawn card IDs, unlocked depth range, 18+ setting, active screen) lives in a single custom hook (`useGameSession`) rather than scattered across components.
+- Session state (current turn number, drawn card IDs, unlocked depth range, 18+ setting, current card) lives in a single custom hook (`useGameSession`) rather than scattered across components. "Active screen" is no longer part of this state — it's owned by React Router instead (see Stack above).
+- Because screens are now separate routes rather than conditionally-rendered siblings of one parent, `useGameSession`'s state needs to survive navigation between them. It's exposed via a small React Context (`SessionProvider`, wrapping `<Routes>` in `App.tsx`) so any route can read/update the session without prop-drilling through the router. Routing and session state are kept as separate concerns: React Router owns *which screen*, Context owns *what's happening in the game*.
 - No persistence layer needed in this phase — session state resets on page reload.
 
 ### Code Quality Requirements
@@ -136,6 +144,13 @@ src/
 - Mobile-first layout (primary target: mobile portrait), scaling gracefully to tablet/desktop.
 - Large, thumb-friendly tap targets; primary actions anchored near the bottom of the viewport on mobile.
 - Respect safe-area insets for notched devices.
+
+---
+
+## Current Status
+- **Frontend-only pass complete for all three screens** (Welcome, Game, End) — visual design, routing, and interaction polish are done, matching the "After Hours" Stitch design system.
+- **Game logic not yet wired**: `GameScreen` currently cycles through a small hardcoded `DEMO_CARDS` array with local `useState`, not a real deck/session. `useGameSession`, `data/cards.ts`, `data/categories.ts`, `data/depthProgression.ts`, and `utils/shuffle.ts` don't exist yet — that's the next planned step, along with the `SessionProvider` Context described under State Management.
+- Audio (`useAudio.ts`) is not implemented; the mute button on the Game screen currently only toggles local UI state with no actual sound.
 
 ---
 
