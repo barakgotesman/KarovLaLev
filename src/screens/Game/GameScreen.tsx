@@ -13,7 +13,6 @@ interface GameScreenProps {
 export default function GameScreen({ onEndSession }: GameScreenProps) {
   const { state, drawNextCard } = useSession();
   const [isFlipped, setIsFlipped] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   // Guards against CardDisplay's onAnimationComplete firing spuriously on
   // mount (isFlipped already starts false, so no real animation runs) —
   // only an explicit "next card" click should trigger a draw.
@@ -59,7 +58,10 @@ export default function GameScreen({ onEndSession }: GameScreenProps) {
         className="relative z-20 shrink-0"
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
-        <div className="h-16 px-gutter flex items-center justify-between">
+        <div
+          className="h-16 flex items-center justify-between"
+          style={{ paddingRight: 'var(--spacing-gutter)', paddingLeft: 'calc(var(--spacing-gutter) + 44px)' }}
+        >
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
             <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
           </div>
@@ -75,15 +77,6 @@ export default function GameScreen({ onEndSession }: GameScreenProps) {
             </h1>
           </div>
           <div className="flex items-center gap-xs">
-            <button
-              type="button"
-              onClick={() => setIsMuted((prev) => !prev)}
-              className="w-9 h-9 flex items-center justify-center text-on-surface-variant cursor-pointer hover:text-primary transition-colors"
-            >
-              <span className="material-symbols-outlined text-[20px]">
-                {isMuted ? 'volume_off' : 'volume_up'}
-              </span>
-            </button>
             <EndSessionControl onEndSession={onEndSession} />
           </div>
         </div>

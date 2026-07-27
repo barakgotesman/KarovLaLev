@@ -4,10 +4,20 @@ import SetupScreen from './screens/Setup/SetupScreen';
 import GameScreen from './screens/Game/GameScreen';
 import EndScreen from './screens/End/EndScreen';
 import { SessionProvider, useSession } from './context/SessionContext';
+import { AudioProvider, useAppAudio } from './context/AudioContext';
+import MuteButton from './components/ui/MuteButton';
 
 function WelcomeRoute() {
   const navigate = useNavigate();
-  return <WelcomeScreen onStart={() => navigate('/setup')} />;
+  const { play } = useAppAudio();
+  return (
+    <WelcomeScreen
+      onStart={() => {
+        play();
+        navigate('/setup');
+      }}
+    />
+  );
 }
 
 function SetupRoute() {
@@ -34,14 +44,17 @@ function EndRoute() {
 
 function App() {
   return (
-    <SessionProvider>
-      <Routes>
-        <Route path="/" element={<WelcomeRoute />} />
-        <Route path="/setup" element={<SetupRoute />} />
-        <Route path="/game" element={<GameRoute />} />
-        <Route path="/end" element={<EndRoute />} />
-      </Routes>
-    </SessionProvider>
+    <AudioProvider>
+      <SessionProvider>
+        <MuteButton />
+        <Routes>
+          <Route path="/" element={<WelcomeRoute />} />
+          <Route path="/setup" element={<SetupRoute />} />
+          <Route path="/game" element={<GameRoute />} />
+          <Route path="/end" element={<EndRoute />} />
+        </Routes>
+      </SessionProvider>
+    </AudioProvider>
   );
 }
 
