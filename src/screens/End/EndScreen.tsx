@@ -1,5 +1,6 @@
 import GlowBackground from '../../components/ui/GlowBackground';
 import Button from '../../components/ui/Button';
+import { useSession } from '../../context/SessionContext';
 
 interface EndScreenProps {
   onRestart: () => void;
@@ -7,6 +8,9 @@ interface EndScreenProps {
 }
 
 export default function EndScreen({ onRestart, onExit }: EndScreenProps) {
+  const { state } = useSession();
+  const [playerOne, playerTwo] = state.playerNames;
+
   return (
     <div className="flex flex-col w-full h-dvh relative overflow-hidden bg-background">
       <GlowBackground />
@@ -38,7 +42,7 @@ export default function EndScreen({ onRestart, onExit }: EndScreenProps) {
             סיימתם את המסע
           </h2>
           <p className="font-sans text-[clamp(13px,2.4vh,16px)] leading-relaxed text-on-surface-variant">
-            תודה על הרגעים המשותפים. מקווים שהתקרבתם קצת יותר.
+            {playerOne} ו{playerTwo}, תודה על הרגעים המשותפים. מקווים שהתקרבתם קצת יותר.
           </p>
         </div>
 
@@ -52,6 +56,9 @@ export default function EndScreen({ onRestart, onExit }: EndScreenProps) {
               סיכום המפגש
             </span>
           </div>
+          <p className="font-sans text-[13px] font-semibold text-on-surface">
+            {playerOne} ו{playerTwo} עברו {state.turnNumber} שאלות ביחד הערב
+          </p>
           <p className="font-sans text-[14px] italic text-on-surface">
             "הדברים היפים ביותר בעולם אינם נראים או נשמעים, אלא מורגשים בלב."
           </p>

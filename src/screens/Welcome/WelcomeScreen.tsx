@@ -1,16 +1,12 @@
-import { useState } from 'react';
 import GlowBackground from '../../components/ui/GlowBackground';
 import heroImage from '../../assets/images/welcome-hero.png';
-import AgeToggle from './AgeToggle';
 import StartButton from './StartButton';
 
 interface WelcomeScreenProps {
-  onStart: (isAdult: boolean) => void;
+  onStart: () => void;
 }
 
 export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
-  const [isAdult, setIsAdult] = useState(false);
-
   return (
     <div
       className="flex flex-col w-full h-dvh relative overflow-hidden bg-background"
@@ -35,8 +31,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         </div>
 
         <div className="w-full max-w-[320px] flex flex-col gap-[clamp(16px,3vh,40px)] items-center">
-          <AgeToggle isAdult={isAdult} onChange={setIsAdult} />
-          <StartButton onStart={() => onStart(isAdult)} />
+          <StartButton onStart={onStart} />
 
           <div className="flex flex-col items-center gap-xs">
             <span className="material-symbols-outlined text-on-tertiary-container opacity-60">

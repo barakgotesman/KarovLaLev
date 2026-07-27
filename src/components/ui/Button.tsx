@@ -15,7 +15,7 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const base =
-    'group relative w-full py-md rounded-xl font-sans text-[18px] font-bold tracking-[0.01em] cursor-pointer transition-all active:scale-95';
+    'group relative w-full py-md rounded-xl font-sans text-[18px] font-bold tracking-[0.01em] cursor-pointer transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 disabled:shadow-none';
 
   const variants = {
     primary:

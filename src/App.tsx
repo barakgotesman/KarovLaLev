@@ -1,14 +1,18 @@
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import WelcomeScreen from './screens/Welcome/WelcomeScreen';
+import SetupScreen from './screens/Setup/SetupScreen';
 import GameScreen from './screens/Game/GameScreen';
 import EndScreen from './screens/End/EndScreen';
-
-// Real session state (deck, depth, drawn cards) not wired yet — routing
-// alone doesn't carry it, that comes with useGameSession in a later pass.
+import { SessionProvider, useSession } from './context/SessionContext';
 
 function WelcomeRoute() {
   const navigate = useNavigate();
-  return <WelcomeScreen onStart={() => navigate('/game')} />;
+  return <WelcomeScreen onStart={() => navigate('/setup')} />;
+}
+
+function SetupRoute() {
+  const navigate = useNavigate();
+  return <SetupScreen onContinue={() => navigate('/game')} />;
 }
 
 function GameRoute() {
@@ -18,18 +22,26 @@ function GameRoute() {
 
 function EndRoute() {
   const navigate = useNavigate();
-  return (
-    <EndScreen onRestart={() => navigate('/')} onExit={() => navigate('/')} />
-  );
+  const { resetSession } = useSession();
+
+  function backToWelcome() {
+    resetSession();
+    navigate('/');
+  }
+
+  return <EndScreen onRestart={backToWelcome} onExit={backToWelcome} />;
 }
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<WelcomeRoute />} />
-      <Route path="/game" element={<GameRoute />} />
-      <Route path="/end" element={<EndRoute />} />
-    </Routes>
+    <SessionProvider>
+      <Routes>
+        <Route path="/" element={<WelcomeRoute />} />
+        <Route path="/setup" element={<SetupRoute />} />
+        <Route path="/game" element={<GameRoute />} />
+        <Route path="/end" element={<EndRoute />} />
+      </Routes>
+    </SessionProvider>
   );
 }
 

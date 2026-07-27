@@ -1,41 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import GlowBackground from '../../components/ui/GlowBackground';
 import gameBackground from '../../assets/images/game-background.png';
 import CardDisplay from './CardDisplay';
-import TurnIndicator from './TurnIndicator';
 import EndSessionControl from './EndSessionControl';
-import type { Category } from '../../types';
+import { useSession } from '../../context/SessionContext';
 
 interface GameScreenProps {
   onEndSession: () => void;
 }
 
-// Placeholder cards for the frontend demo — replaced by the real
-// deck/session logic (useGameSession, data/cards.ts) in a later pass.
-const DEMO_CARDS: { text: string; category: Category; depth: 1 | 2 | 3 | 4 }[] = [
-  {
-    text: 'מהו הרגע השבוע שבו הרגשת הכי קרוב אלי, גם בלי מילים?',
-    category: 'רגשות',
-    depth: 2,
-  },
-  {
-    text: 'מה משהו קטן שאני עושה שגורם לך להרגיש אהוב/ה?',
-    category: 'זוגיות',
-    depth: 1,
-  },
-  {
-    text: 'איזו פחד היית רוצה לחלוק איתי הערב?',
-    category: 'פחדים',
-    depth: 3,
-  },
-];
-
 export default function GameScreen({ onEndSession }: GameScreenProps) {
-  const [player, setPlayer] = useState<1 | 2>(1);
-  const [questionIndex, setQuestionIndex] = useState(0);
+  const { state, drawNextCard } = useSession();
   const [isFlipped, setIsFlipped] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+
+  // Auto-advance to the End screen once the deck is exhausted (currentCard
+  // goes null after a draw), or if the session's filters produced an empty
+  // deck to begin with. Guarded by turnNumber so this doesn't fire if the
+  // screen is reached directly without a session having been started.
+  useEffect(() => {
+    if (!state.currentCard && state.turnNumber > 0) {
+      onEndSession();
+    }
+  }, [state.currentCard, state.turnNumber, onEndSession]);
 
   function handleFlip() {
     setIsFlipped((prev) => !prev);
@@ -43,11 +31,12 @@ export default function GameScreen({ onEndSession }: GameScreenProps) {
 
   function handleNextCard() {
     setIsFlipped(false);
-    setPlayer((prev) => (prev === 1 ? 2 : 1));
-    setQuestionIndex((prev) => (prev + 1) % DEMO_CARDS.length);
+    drawNextCard();
   }
 
-  const currentCard = DEMO_CARDS[questionIndex];
+  if (!state.currentCard) return null;
+
+  const playerName = state.playerNames[state.currentPlayerIndex];
 
   return (
     <div className="flex flex-col w-full h-dvh relative overflow-hidden bg-background">
@@ -61,9 +50,17 @@ export default function GameScreen({ onEndSession }: GameScreenProps) {
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
             <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
           </div>
-          <h1 className="font-sans text-[20px] font-black tracking-tight text-primary [text-shadow:0_0_16px_rgba(255,26,60,0.4)]">
-            המשחק
-          </h1>
+          <div className="flex items-center gap-xs">
+            <span
+              className="material-symbols-outlined text-primary text-[18px]"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              diversity_2
+            </span>
+            <h1 className="font-sans text-[16px] font-black tracking-tight text-primary [text-shadow:0_0_16px_rgba(255,26,60,0.4)]">
+              תור {playerName}
+            </h1>
+          </div>
           <div className="flex items-center gap-xs">
             <button
               type="button"
@@ -79,11 +76,9 @@ export default function GameScreen({ onEndSession }: GameScreenProps) {
         </div>
       </header>
 
-      <div className="relative z-20 flex flex-col flex-1 min-h-0 w-full max-w-[600px] mx-auto">
-        <TurnIndicator player={player} />
-
+      <div className="relative z-20 flex flex-col flex-1 min-h-0 w-full max-w-[600px] mx-auto pt-[clamp(12px,3vh,32px)]">
         <CardDisplay
-          questionText={currentCard.text}
+          questionText={state.currentCard.text}
           isFlipped={isFlipped}
           onFlip={handleFlip}
         />
