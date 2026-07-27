@@ -17,40 +17,42 @@ The experience is entirely front-end for this phase (no backend, no database). C
 ## Functional Specification
 
 ### Core Game Loop
-1. Player opens the app and lands on the **Welcome Screen**.
-2. Welcome Screen explains the concept (closeness built layer by layer) and includes an **18+ toggle** that determines whether cards tagged `isAdult: true` are included in the shuffled deck for this session.
-3. Player taps **"התחילו את המסע"** (Start the Journey). This tap is also the anchor point for starting background audio (browser autoplay policies require a user gesture before audio can play).
-4. The app builds a session deck: all available cards (filtered by the 18+ toggle), shuffled, with **no repeats within a session**.
-5. **Game Screen**: the active player taps the face-down card to trigger a 3D flip-reveal animation showing the question text.
-6. Players discuss the question aloud (no answer is typed or stored by the app).
-7. Turn advances to the other player; a new card is drawn.
-8. **Depth auto-progresses with turn count** — early turns draw only from lower-depth cards, later turns unlock higher-depth cards. (Exact turn thresholds are configurable — see `depthProgression` below.)
-9. Players may **end the session at any time** — there is no forced minimum or maximum number of turns.
-10. If the deck is exhausted (all available cards for the session have been drawn), the app shows the **End Screen**: "סיימתם את המסע" (You've completed the journey), with an option to start a new journey.
+1. Player opens the app and lands on the **Welcome Screen** (pure atmosphere + CTA, no config).
+2. Player taps **"התחילו את המסע"** (Start the Journey), landing on the **Setup Screen** — a 3-step wizard: (1) both players' names (required to proceed), (2) the **18+ toggle** (determines whether cards tagged `isAdult: true` are included), (3) an optional category multi-select filter (nothing selected = no filter, full card bank eligible). Completing step 3 builds the session and starts the game.
+3. The app builds a session deck: all eligible cards (filtered by the 18+ toggle and, if set, the category selection), shuffled, with **no repeats within a session**.
+4. **Game Screen**: the active player taps the face-down card to trigger a 3D flip-reveal animation showing the question text.
+5. Players discuss the question aloud (no answer is typed or stored by the app).
+6. Turn advances to the other player; a new card is drawn.
+7. **Depth auto-progresses with turn count** — early turns draw only from lower-depth cards, later turns unlock higher-depth cards. (Exact turn thresholds are configurable — see `depthProgression` below.)
+8. Players may **end the session at any time** — there is no forced minimum or maximum number of turns.
+9. If the deck is exhausted (all eligible cards for the session have been drawn), the app shows the **End Screen**: "סיימתם את המסע" (You've completed the journey), personalized with the players' names and turn count, with an option to start a new journey.
 
 ### Screens
-- **WelcomeScreen** — intro, atmosphere, 18+ toggle, start CTA
-- **GameScreen** — card draw/flip, turn indicator, end-session control
-- **EndScreen** — completion message, restart option
+- **WelcomeScreen** — intro, atmosphere, start CTA only (no config)
+- **SetupScreen** — 3-step onboarding wizard: player names → 18+ toggle → category filter
+- **GameScreen** — card draw/flip; whose turn it is is shown in the header (not a separate component); end-session control
+- **EndScreen** — completion message personalized with player names + turn count, restart option
+
+Background audio (see Audio below) still anchors to the Welcome screen's CTA tap — that's still the first user gesture in the flow, even though Welcome itself now has no config UI beyond the button.
 
 ### Card Data Model
 Each card is a static object with fields designed to support both today's simple depth-based selection and a future AI-driven selection layer:
 
 ```ts
 interface Card {
-  id: string;            // unique stable identifier, e.g. "past-003"
-  text: string;          // the question text, in Hebrew
-  category: Category;    // see category list below
-  depth: 1 | 2 | 3 | 4;  // 1 = light/opening, 4 = deeply intimate
-  isAdult: boolean;      // true if card should only appear when 18+ toggle is on
-  tags?: string[];       // reserved for future AI/relational logic, unused in v1
+  id: string;             // unique stable identifier, e.g. "past-3"
+  text: string;           // the question text, in Hebrew
+  category: CategoryId;   // numeric id — see Categories below, NOT a Hebrew string
+  depth: 1 | 2 | 3 | 4;   // 1 = light/opening, 4 = deeply intimate
+  isAdult: boolean;       // true if card should only appear when 18+ toggle is on
+  tags?: string[];        // reserved for future AI/relational logic, unused in v1
 }
 ```
 
 ### Categories (initial set)
-עבר, זוגיות, חלומות, שאיפות, לימודים, פחדים, חוויות, אקסטרים, רגשות, ערכים, דמיון/מה אם, חושניות, עתיד משותף, הומור/קלילות, חרטות
+Category identity is **numeric** (`CategoryId = 1 | 2 | ... | 15`), not a Hebrew string — the id/label mapping lives in `data/categories.ts` (`CATEGORIES` array) alongside named constants (`CATEGORY_ID.HUMOR`, `CATEGORY_ID.SENSUALITY`, etc.) so card content in `data/cards.ts` is authored with readable names instead of magic numbers. The 15 categories, light-to-heavy: הומור וקלילות, לימודים, העבר, חוויות, חלומות, שאיפות, ערכים, זוגיות, רגשות, דמיון ו"מה אם", עתיד משותף, אקסטרים, פחדים, חרטות, חושניות.
 
-Cards should be distributed across categories and depth levels so that early depth tiers include lighter categories (הומור, לימודים) and higher depth tiers include heavier categories (פחדים, חושניות, חרטות).
+Cards are distributed across categories and depth levels so that early depth tiers include lighter categories (הומור, לימודים) and higher depth tiers include heavier categories (פחדים, חושניות, חרטות). The card bank currently has one card per category per depth (60 cards total) — `isAdult: true` is only used on חושניות depth 3–4.
 
 ### Depth Progression Logic
 Turn-count-based, not random. Example structure (tune during implementation):
@@ -93,12 +95,15 @@ src/
   screens/
     Welcome/
       WelcomeScreen.tsx
-      AgeToggle.tsx
       StartButton.tsx
+    Setup/
+      SetupScreen.tsx        // 3-step wizard: names -> 18+ -> categories
+      PlayerNamesForm.tsx
+      AgeToggle.tsx           // moved here from Welcome
+      CategoryFilter.tsx      // multi-select chip grid over data/categories.ts
     Game/
-      GameScreen.tsx
+      GameScreen.tsx          // whose-turn display lives in the header now, no separate TurnIndicator
       CardDisplay.tsx        // card back/front + flip animation
-      TurnIndicator.tsx
       EndSessionControl.tsx
     End/
       EndScreen.tsx
@@ -106,22 +111,25 @@ src/
     ui/
       Button.tsx
       Toggle.tsx
+      Input.tsx              // minimalist bottom-border text field
       GlowBackground.tsx
+  context/
+    SessionContext.tsx       // SessionProvider + useSession(), wraps useGameSession for cross-route access
   data/
     cards.ts                // the static card array (Card[])
-    categories.ts           // category enum/list + display labels
+    categories.ts           // CATEGORIES (id -> Hebrew label) + CATEGORY_ID named constants
     depthProgression.ts     // turn-count → unlocked depth range logic
   hooks/
     useGameSession.ts       // deck building, shuffling, draw logic, turn tracking
-    useAudio.ts             // background music + SFX playback control
+    useAudio.ts             // background music + SFX playback control — not yet implemented
   utils/
-    shuffle.ts              // deck shuffling utility (e.g. Fisher-Yates)
-  App.tsx                   // <Routes> definitions (react-router-dom): "/" → Welcome, "/game" → Game, "/end" → End
+    shuffle.ts              // deck shuffling utility (Fisher-Yates)
+  App.tsx                   // <Routes> definitions (react-router-dom): "/" → Welcome, "/setup" → Setup, "/game" → Game, "/end" → End, all wrapped in <SessionProvider>
   main.tsx                  // wraps <App /> in <BrowserRouter>
-  types.ts                  // shared TypeScript types (Card, Category, GameState)
+  types.ts                  // shared TypeScript types (Card, CategoryId, SessionConfig, GameState)
 ```
 
-Each route in `App.tsx` is a thin wrapper component that calls `useNavigate()` and passes the resulting navigation callbacks into the actual screen component as props — the screen components themselves (`WelcomeScreen`, `GameScreen`, `EndScreen`) stay routing-agnostic and only know about `onStart`/`onEndSession`/`onRestart`/`onExit` callback props.
+Each route in `App.tsx` is a thin wrapper component that calls `useNavigate()` (and, where needed, `useSession()`) and passes the resulting navigation callbacks into the actual screen component as props — the screen components themselves (`WelcomeScreen`, `SetupScreen`, `GameScreen`, `EndScreen`) stay routing-agnostic and only know about callback props (`onStart`/`onContinue`/`onEndSession`/`onRestart`/`onExit`).
 
 ### Data Management Guidelines
 - `data/cards.ts` exports a single typed array of `Card` objects. Keep it as the single source of truth for content — no card text duplicated elsewhere.
@@ -148,9 +156,9 @@ Each route in `App.tsx` is a thin wrapper component that calls `useNavigate()` a
 ---
 
 ## Current Status
-- **Frontend-only pass complete for all three screens** (Welcome, Game, End) — visual design, routing, and interaction polish are done, matching the "After Hours" Stitch design system.
-- **Game logic not yet wired**: `GameScreen` currently cycles through a small hardcoded `DEMO_CARDS` array with local `useState`, not a real deck/session. `useGameSession`, `data/cards.ts`, `data/categories.ts`, `data/depthProgression.ts`, and `utils/shuffle.ts` don't exist yet — that's the next planned step, along with the `SessionProvider` Context described under State Management.
-- Audio (`useAudio.ts`) is not implemented; the mute button on the Game screen currently only toggles local UI state with no actual sound.
+- **All four screens built and wired to a real session**: Welcome → Setup (3-step wizard) → Game → End, matching the "After Hours" Stitch design system, with real routing (`react-router-dom`) and a real card bank (`data/cards.ts`, 60 cards) driving actual deck build/shuffle/draw/depth-progression logic via `useGameSession` + `SessionProvider`.
+- **Not yet implemented**: audio (`useAudio.ts` doesn't exist yet — the mute button on the Game screen only toggles local UI state with no actual sound), and no persistence beyond the in-memory session (by design, per spec).
+- **Known simplification worth revisiting**: `pickNextCard` in `useGameSession.ts` falls back to the shallowest remaining undrawn card if nothing fits the currently-unlocked depth (e.g. a narrow category filter could exhaust depth-1 cards before turn count unlocks depth-2) — keeps the game playable rather than blocking, but means depth pacing isn't strictly guaranteed under aggressive filtering.
 
 ---
 
