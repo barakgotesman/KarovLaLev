@@ -12,7 +12,7 @@ interface GameScreenProps {
 }
 
 export default function GameScreen({ onEndSession }: GameScreenProps) {
-  const { state, drawNextCard } = useSession();
+  const { state, drawNextCard, remainingCards } = useSession();
   const [isFlipped, setIsFlipped] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   // Guards against CardDisplay's onAnimationComplete firing spuriously on
@@ -64,7 +64,13 @@ export default function GameScreen({ onEndSession }: GameScreenProps) {
           className="h-16 flex items-center justify-between"
           style={{ paddingRight: 'var(--spacing-gutter)', paddingLeft: 'calc(var(--spacing-gutter) + 44px)' }}
         >
-          <div className="w-9 h-9" />
+          <div className="w-9 h-9 flex items-center justify-center">
+            <span className="font-sans text-[11px] font-semibold text-on-surface-variant/70 text-center leading-tight">
+              {remainingCards} קלפים
+              <br />
+              נותרו
+            </span>
+          </div>
           <div className="flex items-center gap-xs">
             <span
               className="material-symbols-outlined text-primary text-[18px]"

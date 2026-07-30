@@ -76,6 +76,7 @@ export function useGameSession() {
   }
 
   const hasCardsRemaining = state.drawnCardIds.length < deckRef.current.length;
+  const remainingCards = deckRef.current.length - state.drawnCardIds.length;
 
-  return { state, startSession, drawNextCard, hasCardsRemaining, resetSession };
+  return { state, startSession, drawNextCard, hasCardsRemaining, remainingCards, resetSession };
 }

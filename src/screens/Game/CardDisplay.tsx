@@ -92,7 +92,7 @@ export default function CardDisplay({
               className="w-16 h-16 rounded-full bg-gradient-to-b from-primary/20 to-transparent flex items-center justify-center mb-md"
               style={{ animation: 'card-icon-pulse 2.5s ease-in-out infinite' }}
             >
-              <span className="material-symbols-outlined text-primary text-[32px]">auto_awesome</span>
+              <span className="material-symbols-outlined text-primary text-[32px]">question_mark</span>
             </div>
             <span className="font-sans text-[16px] font-semibold text-primary opacity-60">
               געו כדי לגלות
