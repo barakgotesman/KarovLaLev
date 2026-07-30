@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import WelcomeScreen from './screens/Welcome/WelcomeScreen';
 import SetupScreen from './screens/Setup/SetupScreen';
@@ -27,6 +28,18 @@ function SetupRoute() {
 
 function GameRoute() {
   const navigate = useNavigate();
+  const { state } = useSession();
+
+  // If this route is reached with no active session (direct navigation,
+  // a page reload, or a dev-server full-reload wiping in-memory state),
+  // there's no card to show — send the player back to start instead of
+  // rendering a blank screen.
+  useEffect(() => {
+    if (state.turnNumber === 0) {
+      navigate('/', { replace: true });
+    }
+  }, [state.turnNumber, navigate]);
+
   return <GameScreen onEndSession={() => navigate('/end')} />;
 }
 
