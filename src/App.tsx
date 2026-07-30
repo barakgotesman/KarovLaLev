@@ -22,7 +22,7 @@ function WelcomeRoute() {
 
 function SetupRoute() {
   const navigate = useNavigate();
-  return <SetupScreen onContinue={() => navigate('/game')} />;
+  return <SetupScreen onContinue={() => navigate('/game')} onExit={() => navigate('/')} />;
 }
 
 function GameRoute() {

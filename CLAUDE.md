@@ -18,7 +18,7 @@ The experience is entirely front-end for this phase (no backend, no database). C
 
 ### Core Game Loop
 1. Player opens the app and lands on the **Welcome Screen** (pure atmosphere + CTA, no config).
-2. Player taps **"התחילו את המסע"** (Start the Journey), landing on the **Setup Screen** — a 3-step wizard: (1) both players' names (required to proceed), (2) the **18+ toggle** (determines whether cards tagged `isAdult: true` are included), (3) an optional category multi-select filter (nothing selected = no filter, full card bank eligible). Completing step 3 builds the session and starts the game.
+2. Player taps **"התחילו את השיחה"** (Start the Conversation), landing on the **Setup Screen** — a 3-step wizard: (1) both players' names (required to proceed), (2) the **18+ toggle** (determines whether cards tagged `isAdult: true` are included), (3) an optional category multi-select filter (nothing selected = no filter, full card bank eligible). Completing step 3 builds the session and starts the game.
 3. The app builds a session deck: all eligible cards (filtered by the 18+ toggle and, if set, the category selection), shuffled, with **no repeats within a session**.
 4. **Game Screen**: the active player taps the face-down card to trigger a 3D flip-reveal animation showing the question text.
 5. Players discuss the question aloud (no answer is typed or stored by the app).

@@ -10,12 +10,18 @@ import PlayerNamesForm from './PlayerNamesForm';
 
 interface SetupScreenProps {
   onContinue: () => void;
+  onExit: () => void;
 }
 
-const STEP_TITLES = ['איך קוראים לכם?', 'תוכן למבוגרים?', 'על מה תרצו לדבר?'];
+const STEP_TITLES = ['מי משחק הערב?', 'עד כמה עמוק תרצו לצלול?', 'יש נושא שבא לכם לדבר עליו?'];
+const STEP_SUBTITLES = [
+  'הזינו את השמות שלך ושל בן/בת הזוג',
+  'בנוסף לשאלות הרגילות, יש לנו גם קלפי 18+ – שאלות אינטימיות וחושניות יותר, למי שרוצה להעז.',
+  'בחרו קטגוריה אחת או יותר, או דלגו – ואז נערבב לכם מכל הקלפים',
+];
 const TOTAL_STEPS = STEP_TITLES.length;
 
-export default function SetupScreen({ onContinue }: SetupScreenProps) {
+export default function SetupScreen({ onContinue, onExit }: SetupScreenProps) {
   const { startSession } = useSession();
   const [step, setStep] = useState(0);
   const [names, setNames] = useState<[string, string]>(['', '']);
@@ -41,6 +47,10 @@ export default function SetupScreen({ onContinue }: SetupScreenProps) {
   }
 
   function handleBack() {
+    if (step === 0) {
+      onExit();
+      return;
+    }
     setStep((prev) => Math.max(0, prev - 1));
   }
 
@@ -67,9 +77,16 @@ export default function SetupScreen({ onContinue }: SetupScreenProps) {
           ))}
         </div>
 
-        <h1 className="shrink-0 font-sans text-[clamp(22px,5vh,30px)] font-black tracking-tight text-primary [text-shadow:0_0_16px_rgba(255,26,60,0.4)] text-center">
-          {STEP_TITLES[step]}
-        </h1>
+        <div className="shrink-0 flex flex-col items-center gap-xs">
+          <h1 className="font-sans text-[clamp(22px,5vh,30px)] font-black tracking-tight text-primary [text-shadow:0_0_16px_rgba(255,26,60,0.4)] text-center">
+            {STEP_TITLES[step]}
+          </h1>
+          {STEP_SUBTITLES[step] && (
+            <p className="font-sans text-[13px] leading-relaxed text-on-surface-variant text-center">
+              {STEP_SUBTITLES[step]}
+            </p>
+          )}
+        </div>
 
         <div className="w-full max-w-[320px] shrink-0 min-h-[140px] flex items-center">
           <AnimatePresence mode="wait">
@@ -84,7 +101,11 @@ export default function SetupScreen({ onContinue }: SetupScreenProps) {
               {step === 0 && <PlayerNamesForm names={names} onChange={setNames} />}
               {step === 1 && <AgeToggle isAdult={isAdult} onChange={setIsAdult} />}
               {step === 2 && (
-                <CategoryFilter selected={selectedCategories} onChange={setSelectedCategories} />
+                <CategoryFilter
+                  selected={selectedCategories}
+                  onChange={setSelectedCategories}
+                  isAdultEnabled={isAdult}
+                />
               )}
             </motion.div>
           </AnimatePresence>
@@ -94,15 +115,13 @@ export default function SetupScreen({ onContinue }: SetupScreenProps) {
           <Button variant="primary" pulse={isLastStep} disabled={namesMissing} onClick={handleNext}>
             {isLastStep ? 'בואו נתחיל' : 'המשך'}
           </Button>
-          {step > 0 && (
-            <button
-              type="button"
-              onClick={handleBack}
-              className="h-11 rounded-full font-sans text-[13px] font-semibold text-on-surface-variant cursor-pointer flex items-center justify-center transition-colors hover:text-primary"
-            >
-              חזרה
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleBack}
+            className="h-11 rounded-full font-sans text-[13px] font-semibold text-on-surface-variant cursor-pointer flex items-center justify-center transition-colors hover:text-primary"
+          >
+            חזרה
+          </button>
         </div>
       </div>
     </div>

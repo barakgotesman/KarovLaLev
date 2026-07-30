@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import type { Card, GameState, SessionConfig } from '../types';
-import { CARDS } from '../data/cards';
 import { getUnlockedDepth } from '../data/depthProgression';
 import { shuffle } from '../utils/shuffle';
+import { getEligibleCards } from '../utils/eligibleCards';
 
 const INITIAL_STATE: GameState = {
   playerNames: ['שחקן 1', 'שחקן 2'],
@@ -40,12 +40,7 @@ export function useGameSession() {
   // Builds the session's deck (filtered by 18+ setting and category
   // selection, then shuffled once) and draws the first card.
   function startSession(config: SessionConfig) {
-    const eligible = CARDS.filter(
-      (card) =>
-        (config.isAdultEnabled || !card.isAdult) &&
-        (config.selectedCategories.length === 0 ||
-          config.selectedCategories.includes(card.category)),
-    );
+    const eligible = getEligibleCards(config.isAdultEnabled, config.selectedCategories);
     deckRef.current = shuffle(eligible);
 
     const firstCard = pickNextCard(deckRef.current, [], 1);

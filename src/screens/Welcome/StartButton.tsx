@@ -8,7 +8,7 @@ interface StartButtonProps {
 export default function StartButton({ onStart }: StartButtonProps) {
   return (
     <Button variant="primary" pulse onClick={onStart}>
-      התחילו את המסע
+      התחילו את השיחה
     </Button>
   );
 }

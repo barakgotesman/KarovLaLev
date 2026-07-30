@@ -4,6 +4,7 @@ import GlowBackground from '../../components/ui/GlowBackground';
 import gameBackground from '../../assets/images/game-background.png';
 import CardDisplay from './CardDisplay';
 import EndSessionControl from './EndSessionControl';
+import ConfirmEndModal from './ConfirmEndModal';
 import { useSession } from '../../context/SessionContext';
 
 interface GameScreenProps {
@@ -13,6 +14,7 @@ interface GameScreenProps {
 export default function GameScreen({ onEndSession }: GameScreenProps) {
   const { state, drawNextCard } = useSession();
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   // Guards against CardDisplay's onAnimationComplete firing spuriously on
   // mount (isFlipped already starts false, so no real animation runs) —
   // only an explicit "next card" click should trigger a draw.
@@ -62,9 +64,7 @@ export default function GameScreen({ onEndSession }: GameScreenProps) {
           className="h-16 flex items-center justify-between"
           style={{ paddingRight: 'var(--spacing-gutter)', paddingLeft: 'calc(var(--spacing-gutter) + 44px)' }}
         >
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
-          </div>
+          <div className="w-9 h-9" />
           <div className="flex items-center gap-xs">
             <span
               className="material-symbols-outlined text-primary text-[18px]"
@@ -77,7 +77,7 @@ export default function GameScreen({ onEndSession }: GameScreenProps) {
             </h1>
           </div>
           <div className="flex items-center gap-xs">
-            <EndSessionControl onEndSession={onEndSession} />
+            <EndSessionControl onEndSession={() => setIsConfirmOpen(true)} />
           </div>
         </div>
       </header>
@@ -112,6 +112,12 @@ export default function GameScreen({ onEndSession }: GameScreenProps) {
           </AnimatePresence>
         </div>
       </div>
+
+      <ConfirmEndModal
+        open={isConfirmOpen}
+        onConfirm={onEndSession}
+        onCancel={() => setIsConfirmOpen(false)}
+      />
     </div>
   );
 }
